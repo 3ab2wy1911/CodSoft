@@ -1,0 +1,60 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.24"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "LIBRARY_MANAGEMENT_SYSTEM",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "LIBRARY_MANAGEMENT_SYSTEM::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-LIBRARY_MANAGEMENT_SYSTEM-Debug-3524766f2f64b3be3e5e.json",
+					"name" : "LIBRARY_MANAGEMENT_SYSTEM",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "E:/PROJECTS/CodSoft/C++ Tasks/LIBRARY MANAGEMENT SYSTEM/cmake-build-debug",
+		"source" : "E:/PROJECTS/CodSoft/C++ Tasks/LIBRARY MANAGEMENT SYSTEM"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}
