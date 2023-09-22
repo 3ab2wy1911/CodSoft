@@ -11,13 +11,9 @@ transactions in a library
 
 //________________________________________________________________
 class manager{
-private:
-//    vector<book> books;
-//    customer current_customer;
-    //----------------------------------------------------------------
 public:
     manager()= default;
-    void display (){
+    static void display (){
         int input = 1;
         while (input){
             cout << "Welcome to LIBRARY MANAGEMENT SYSTEM :)\n";
@@ -30,6 +26,7 @@ public:
             else if (input == 2) {
                 customer_display();
             }
+            cout << "___________________________________________________________________________________________________\n";
         }
         cout << "Thanks for using LIBRARY MANAGEMENT SYSTEM \n";
     }
@@ -44,6 +41,32 @@ public:
         sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
     };
     //----------------------------------------------------------------
+    static void delete_book(int book_id) {
+        sqlite3* db;
+        sqlite3_open("Library.db", &db);
+        string check_sql = "SELECT 1 FROM books WHERE book_id = " + to_string(book_id) + ";";
+        sqlite3_stmt* check_stmt;
+
+        if (sqlite3_prepare_v2(db, check_sql.c_str(), -1, &check_stmt, nullptr) == SQLITE_OK) {
+            if (sqlite3_step(check_stmt) == SQLITE_ROW) {
+                string sql = "DELETE FROM books WHERE book_id = " + to_string(book_id) + ";";
+                if (sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr) == SQLITE_OK) {
+                    cout << "Book with ID " << book_id << " has been deleted." << endl;
+                } else {
+                    cerr << "Error deleting book: " << sqlite3_errmsg(db) << endl;
+                }
+            } else {
+                cout << "Book with ID " << book_id << " does not exist in the library." << endl;
+            }
+
+            sqlite3_finalize(check_stmt);
+        } else {
+            cerr << "Error preparing SQL statement: " << sqlite3_errmsg(db) << endl;
+        }
+
+        sqlite3_close(db);
+    }
+    //----------------------------------------------------------------
     static void update_book(int id , const string& status){  // update the book from available to unavailable.
         sqlite3* db;
         sqlite3_open("Library.db", &db);
@@ -56,11 +79,11 @@ public:
         sqlite3* db;
         sqlite3_stmt* stmt;
         sqlite3_open("Library.db", &db);
-        string sql = "SELECT book_id, title, author, isbn, price, status FROM books WHERE status = 'Available';";
+        string sql = "SELECT book_id, title, author, isbn, price, status FROM books;";
 
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
             cout << "Books in the library:" << endl;
-
+            cout<<"----------------------------------------------------------------\n";
             while (sqlite3_step(stmt) == SQLITE_ROW) {
                 int bookId = sqlite3_column_int(stmt, 0);
                 const char* title = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
@@ -76,6 +99,7 @@ public:
                 cout << "ISBN: " << isbn << endl;
                 cout << "Price: $" << price << endl;
                 cout << "Status: " << status << endl;
+                cout<<"-------------------------------------------------------------------------------------------------\n";
                 cout << endl;
             }
 
@@ -84,20 +108,59 @@ public:
         else {
             cerr << "Error preparing SQL statement: " << sqlite3_errmsg(db) <<endl;
         }
+        cout << "___________________________________________________________________________________________________\n";
+        sqlite3_close(db);
+    }
+    //----------------------------------------------------------------
+    static void check_out(int book_id){
+        double customer_balance;
+        sqlite3* db;
+        sqlite3_open("Library.db", &db);
+        string sql = "SELECT price FROM books WHERE book_id = " + to_string(book_id) + "\" AND status = 'Available';\";";
+        sqlite3_stmt* stmt;
+        double book_price;
+
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                book_price = sqlite3_column_double(stmt, 0);
+                cout << "The book price is " << book_price << endl;
+                cout << "Please enter the money amount";
+                cin>>customer_balance;
+                if (customer_balance >= book_price) {
+                    update_book(book_id, "Unavailable");
+
+                    cout << "----------------------------------------------------------------\n";
+                    cout << "Book with ID " << book_id << " has been checked out." << endl;
+                    cout << "Amount paid: " << customer_balance << endl;
+                    cout << "Book price is " << book_price << endl;
+                    cout << "Reminder: " << customer_balance - book_price << endl;
+                    cout << "----------------------------------------------------------------\n";
+                }
+                else {
+                    cout << "Insufficient balance to check out the book." << endl;
+                }
+            }
+            else {
+                cout << "Book with ID " << book_id << " is not available." << endl;
+            }
+
+            sqlite3_finalize(stmt);
+        }
+        else {
+            cout<<"Book is not available:(\n";
+        }
+
+        cout << "___________________________________________________________________________________________________\n";
 
         sqlite3_close(db);
     }
     //----------------------------------------------------------------
-    void check_out(int book_id){
-
-    }
-    //----------------------------------------------------------------
     static void admin_display() {
-        cout << "Welcome our Administrator!" << endl;
         int input =1;
         while(input){
+            cout << "Welcome our Administrator!" << endl;
             cout << "Choose an option to do :\n";
-            cout << "1.Insert a new book\n0.Exit\n";
+            cout << "1.Insert a new book\n2.Remove book.\n0.Exit\n";
             cin >> input;
             if(input == 1){
                 string title,isbn,author,status;
@@ -116,19 +179,28 @@ public:
                 cin >> price;
                 insert_book(id,title,author,isbn,price,"Available");
             }
+
+            else if (input == 2){
+                print_books();
+                int id;
+                cout << "Please enter book id:";
+                cin >>id;
+                delete_book(id);
+            }
+            cout << "___________________________________________________________________________________________________\n";
         }
 
     };
     //----------------------------------------------------------------
-    void customer_display(){    // customer menu display.
+    static void customer_display(){    // customer menu display.
         string name;
-        cout << "Welcome our Dear Customer :)\n";
         int input = 1;
         //----------------------------------------------------------------
         while (input){
             int book_id =1;
+            cout << "Welcome our Dear Customer :)\n";
             cout << "Please enter your Choice :" << endl;
-            cout << "1. Borrow a Book\n2.Return a Book\n0.Exit!\n";
+            cout << "1.Borrow a Book\n2.Return a Book\n0.Exit!\n";
             cin>> input;
             //----------------------------------------------------------------
             if(input == 1){
@@ -145,7 +217,9 @@ public:
                 cout<<"Thanks for returning the Book\n";
             }
             //-----------------------------------------------------------------
+            cout << "___________________________________________________________________________________________________\n";
         }
+
     }
     //----------------------------------------------------------------
 };
@@ -162,7 +236,6 @@ int main() {
     sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS books (book_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, author TEXT, isbn TEXT NOT NULL, price REAL NOT NULL, status TEXT NOT NULL);",nullptr,nullptr,nullptr);
 
     // Calling the main display function of the Program
-    manager manage;
-    manage.display();
+    manager::display();
 
 }
